@@ -9,13 +9,13 @@ std::vector<int> similar::similar_matrix(std::vector<int>& matr) {
 
     int determinant = sqrt((pow(polynomial_A2, 2) - 4 * polynomial_A3));
     if (pow(determinant, 2) == pow(polynomial_A2, 2) - 4 * polynomial_A3) {
-        eigenvalue_À1 = (-polynomial_A2 - determinant) / 2;
-        eigenvalue_À2 = (-polynomial_A2 + determinant) / 2;
+        eigenvalue_A1 = (-polynomial_A2 - determinant) / 2;
+        eigenvalue_A2 = (-polynomial_A2 + determinant) / 2;
     }
     else {
         throw -1;
     }
-    eigenvalue = std::min(eigenvalue_À1, eigenvalue_À2);
+    eigenvalue = std::min(eigenvalue_A1, eigenvalue_A2);
 
     characteristic_matrix_A = matr;
     for (int i = 0; i < dimension; i++) {
@@ -83,11 +83,11 @@ std::vector<int> similar::similar_matrix(std::vector<int>& matr) {
     }
 
     printf("\n");
-    if (eigenvalue_À1 == eigenvalue_À2) {
+    if (eigenvalue_A1 == eigenvalue_A2) {
         printf("a = %d\n", eigenvalue);
     }
     else {
-        printf("a = %d, b = %d\n", eigenvalue_À1, eigenvalue_À2);
+        printf("a = %d, b = %d\n", eigenvalue_A1, eigenvalue_A2);
     }
 
     printf("\n");
