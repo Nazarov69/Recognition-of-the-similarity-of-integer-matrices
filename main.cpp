@@ -1,26 +1,25 @@
-﻿#include <iostream>
-#include <vector>
-
-#include "matrix.h"
+﻿#include "matrix.h"
 
 int main() {
     std::vector<int> A(dimension * dimension);
     std::vector<int> C(dimension * dimension);
-    A[0] = 1;
-    A[1] = 5;
+    A[0] = -5;
+    A[1] = 12;
     A[2] = 0;
     A[3] = 2;
 
     similar sim;
     C = sim.similar_matrix(A);
-    
-    if (C[1] < 0) { sim.similar_matrix_with_negative_element(C); }
 
-    if (sim.get_eigenvalue_A1() != sim.get_eigenvalue_A2() && C[1] >= C[3] - C[0]) {
-        sim.first_interval(C);
-    }
+    std::vector<int> B(dimension * dimension);
+    std::vector<int> D(dimension * dimension);
+    B[0] = -5;
+    B[1] = 23;
+    B[2] = 0;
+    B[3] = 2;
 
-    if (sim.get_eigenvalue_A1() != sim.get_eigenvalue_A2() && C[1] > (C[3] - C[0]) / 2) {
-        sim.second_interval(C);
-    }
+    similar sim_2;
+    D = sim_2.similar_matrix(B);
+
+    sim.class_comparison(A, C, B, D, sim_2);
 }
