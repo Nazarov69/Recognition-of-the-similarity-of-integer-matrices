@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <vector>
 #define dimension 2
 
@@ -20,4 +21,9 @@ public:
 	void class_comparison(const std::vector<int>& a, const std::vector<int>& c, const std::vector<int>& b, const std::vector<int>& d, const similar& sim);
 	std::vector<int> inverse_matrix(const std::vector<int>& matr);
 	std::vector<int> multiplication(const std::vector<int>& a, const std::vector<int>& b);
+	void error(int err) {
+		printf("-1 - eigenvalues\n");
+		printf("-2 - determinant inverse matrix");
+		exit(err);
+	}
 };

@@ -13,8 +13,9 @@ std::vector<int> similar::similar_matrix(std::vector<int>& matr) {
         eigenvalue_A2 = (-polynomial_A2 + determinant) / 2;
     }
     else {
-        throw - 1;
+        error(-1);
     }
+        
     eigenvalue = std::min(eigenvalue_A1, eigenvalue_A2);
 
     characteristic_matrix_A = matr;
@@ -34,7 +35,36 @@ std::vector<int> similar::similar_matrix(std::vector<int>& matr) {
         eigenvector[1] = characteristic_matrix_A[3];
     }
     else {
-        throw - 2;
+        S = { 1,0,0,1 };
+        std::vector<int> inverse_S(dimension * dimension, 0);
+        std::vector<int> left_operation(dimension * dimension, 0);
+        std::vector<int> C(dimension * dimension, 0);
+        inverse_S = inverse_matrix(S);
+        left_operation = multiplication(inverse_S, matr);
+        C = multiplication(left_operation, S);
+
+        printf("input matrix:\n");
+        for (int i = 0; i < dimension; i++) {
+            printf("| %d %d |\n", matr[i * dimension], matr[i * dimension + 1]);
+        }
+
+        if (eigenvalue_A1 == eigenvalue_A2) {
+            printf("\na = %d\n", eigenvalue);
+        }
+        else {
+            printf("\na = %d, b = %d\n", eigenvalue_A1, eigenvalue_A2);
+        }
+
+        printf("\nS^(-1) * A * S = C\n");
+        for (int i = 0; i < dimension; i++) {
+            printf("| %d %d | \t | %d %d | \t | %d %d | \t = \t | %d %d |\n",
+                inverse_S[i * dimension], inverse_S[i * dimension + 1],
+                matr[i * dimension], matr[i * dimension + 1],
+                S[i * dimension], S[i * dimension + 1],
+                C[i * dimension], C[i * dimension + 1]);
+        }
+        printf("\n----------------------------------------------------------------\n\n");
+        return C;
     }
     while (nod != 1) {
         eigenvector[0] /= nod;
@@ -44,8 +74,8 @@ std::vector<int> similar::similar_matrix(std::vector<int>& matr) {
 
     S[0] = eigenvector[1];
     S[2] = -eigenvector[0];
-    int a = std::abs(S[0]);
-    int b = std::abs(S[2]);
+    int a = S[0];
+    int b = S[2];
     int x, y;
     gcd(a, b, x, y);
     S[1] = -y;
@@ -174,6 +204,41 @@ void similar::class_comparison(const std::vector<int>& a, const std::vector<int>
     printf("\nidentical classes\n");
     printf("\n----------------------------------------------------------------\n");
 
+    //******************************************************************************************************************
+
+    std::vector<std::vector<int>> transform_matrix_A(parts_transform_matrix.size());
+    std::vector<std::vector<int>> transform_matrix_B(sim.parts_transform_matrix.size());
+
+    transform_matrix_A = parts_transform_matrix;
+    transform_matrix_B = sim.parts_transform_matrix;
+
+    std::vector<int> tr_A = transform_matrix_A[0];
+    std::vector<int> tr_B = transform_matrix_B[0];
+
+    for (int i = 0; i < transform_matrix_A.size() - 1; i++) {
+        tr_A = { 0,0,0,0 };
+        tr_A = multiplication(transform_matrix_A[i], transform_matrix_A[i + 1]);
+        transform_matrix_A[i + 1] = tr_A;
+    }
+
+    for (int i = 0; i < transform_matrix_B.size() - 1; i++) {
+        tr_B = { 0,0,0,0 };
+        tr_B = multiplication(transform_matrix_B[i], transform_matrix_B[i + 1]);
+        transform_matrix_B[i + 1] = tr_B;
+    }
+
+    printf("\nfirst transform matrix:\n");
+    for (int i = 0; i < dimension; i++) {
+        printf("| %d %d |\n", tr_A[i * dimension], tr_A[i * dimension + 1]);
+    }
+
+    printf("\nsecond transform matrix:\n");
+    for (int i = 0; i < dimension; i++) {
+        printf("| %d %d |\n", tr_B[i * dimension], tr_B[i * dimension + 1]);
+    }
+
+    //******************************************************************************************************************
+
     std::vector<int> inv(dimension * dimension);
     for (int i = sim.parts_transform_matrix.size() - 1; i >= 0; i--) {
         inv = inverse_matrix(sim.parts_transform_matrix[i]);
@@ -197,7 +262,43 @@ void similar::class_comparison(const std::vector<int>& a, const std::vector<int>
     for (int i = 0; i < dimension; i++) {
         printf("| %d %d |\n", transform_matrix[i * dimension], transform_matrix[i * dimension + 1]);
     }
+
+    //******************************************************************************************************************
+    std::vector<int> inv1(dimension * dimension, 0);
+    std::vector<int> f1_op(dimension * dimension, 0);
+    std::vector<int> sec1_op(dimension * dimension, 0);
+    inv1 = inverse_matrix(tr_A);
+    f1_op = multiplication(inv1, a);
+    sec1_op = multiplication(f1_op, tr_A);
+
+    std::vector<int> inv2(dimension * dimension, 0);
+    std::vector<int> f2_op(dimension * dimension, 0);
+    std::vector<int> sec2_op(dimension * dimension, 0);
+    inv2 = inverse_matrix(tr_B);
+    f2_op = multiplication(inv2, b);
+    sec2_op = multiplication(f2_op, tr_B);
+    
     printf("\nmatrix check:\n");
+
+    for (int i = 0; i < dimension; i++) {
+        printf("| %d %d | \t | %d %d | \t | %d %d | \t = \t | %d %d |\n",
+            inv1[i * dimension], inv1[i * dimension + 1],
+            a[i * dimension], a[i * dimension + 1],
+            tr_A[i * dimension], tr_A[i * dimension + 1],
+            sec1_op[i * dimension], sec1_op[i * dimension + 1]);
+    }
+
+    printf("\n");
+    for (int i = 0; i < dimension; i++) {
+        printf("| %d %d | \t | %d %d | \t | %d %d | \t = \t | %d %d |\n",
+            inv2[i * dimension], inv2[i * dimension + 1],
+            b[i * dimension], b[i * dimension + 1],
+            tr_B[i * dimension], tr_B[i * dimension + 1],
+            sec2_op[i * dimension], sec2_op[i * dimension + 1]);
+    }
+    printf("\n");
+    //******************************************************************************************************************
+
     for (int i = 0; i < dimension; i++) {
         printf("| %d %d | \t | %d %d | \t | %d %d | \t = \t | %d %d |\n",
             inverse[i * dimension], inverse[i * dimension + 1],
@@ -205,12 +306,25 @@ void similar::class_comparison(const std::vector<int>& a, const std::vector<int>
             transform_matrix[i * dimension], transform_matrix[i * dimension + 1],
             second_op[i * dimension], second_op[i * dimension + 1]);
     }
+
     printf("\n----------------------------------------------------------------\n");
-    if (second_op == b) {
-        printf("\nDONE\n");
+    if (sec1_op == c) {
+        printf("\n1.DONE\n");
     }
     else {
-        printf("\nNOT DONE\n");
+        printf("\n1.NOT DONE\n");
+    }
+    if (sec2_op == d) {
+        printf("\n2.DONE\n");
+    }
+    else {
+        printf("\n2.NOT DONE\n");
+    }
+    if (second_op == b) {
+        printf("\n3.DONE\n");
+    }
+    else {
+        printf("\n3.NOT DONE\n");
     }
 }
 
@@ -218,7 +332,7 @@ std::vector<int> similar::inverse_matrix(const std::vector<int>& matr) {
     std::vector<int> inverse(dimension * dimension);
     int det = matr[0] * matr[3] - matr[1] * matr[2];
     if (det != 1 && det != -1) {
-        throw - 3;
+        error(-2);
     }
     inverse[0] = matr[3] * det;
     inverse[1] = -matr[1] * det;
