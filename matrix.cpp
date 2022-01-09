@@ -35,7 +35,10 @@ std::vector<int> similar::similar_matrix(std::vector<int>& matr) {
         eigenvector[1] = characteristic_matrix_A[3];
     }
     else {
-        S = { 1,0,0,1 };
+        nod = 1;
+        eigenvector[0] = 0;
+        eigenvector[1] = 1;
+        /*S = { 1,0,0,1 };
         std::vector<int> inverse_S(dimension * dimension, 0);
         std::vector<int> left_operation(dimension * dimension, 0);
         std::vector<int> C(dimension * dimension, 0);
@@ -64,7 +67,7 @@ std::vector<int> similar::similar_matrix(std::vector<int>& matr) {
                 C[i * dimension], C[i * dimension + 1]);
         }
         printf("\n----------------------------------------------------------------\n\n");
-        return C;
+        return C;*/
     }
     while (nod != 1) {
         eigenvector[0] /= nod;
