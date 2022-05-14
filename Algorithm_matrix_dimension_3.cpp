@@ -3,7 +3,9 @@
 std::vector<std::vector<int>> Algorithm::algorithm(const std::vector<std::vector<int>>& matr, std::vector<std::vector<int>>& analog) {
     first_coefficient = 1;
     second_coefficient = -(matr[0][0] + matr[1][1] + matr[2][2]);
-    third_coefficient = (get_det_2_2(matr[0][0], matr[0][1], matr[1][0], matr[1][1]) + get_det_2_2(matr[1][1], matr[1][2], matr[2][1], matr[2][2]) + get_det_2_2(matr[0][0], matr[0][2], matr[2][0], matr[2][2]));
+    third_coefficient = (get_det_2_2(matr[0][0], matr[0][1], matr[1][0], matr[1][1]) + 
+        get_det_2_2(matr[1][1], matr[1][2], matr[2][1], matr[2][2]) + 
+        get_det_2_2(matr[0][0], matr[0][2], matr[2][0], matr[2][2]));
     fourth_coefficient = -get_det_3_3(matr);
 
     get_eigenvalues(matr);
@@ -267,7 +269,8 @@ std::vector<std::vector<int>> Algorithm::algorithm(const std::vector<std::vector
                 abs(second_eigenvalues - first_eigenvalues) / 2, nod);
             return res;
         }
-        else if (abs(second_eigenvalues - first_eigenvalues) % 2 == 0 && res[0][1] != 0 && res[0][1] <= abs(second_eigenvalues - first_eigenvalues) / 2 - 1 &&  res[1][2] >= 1) {
+        else if (abs(second_eigenvalues - first_eigenvalues) % 2 == 0 
+            && res[0][1] != 0 && res[0][1] <= abs(second_eigenvalues - first_eigenvalues) / 2 - 1 &&  res[1][2] >= 1) {
             printf("II.b.1\n 1 <= a_1 <= |beta - alpha| / 2 - 1 = %d\n 0 <= a_2 < d = %d\n a_3 >= 1\n\n\n",
                 abs(second_eigenvalues - first_eigenvalues) / 2 - 1, nod);
             return res;
@@ -363,7 +366,8 @@ std::vector<std::vector<int>> Algorithm::algorithm(const std::vector<std::vector
             }
         }
 
-        if (res[1][2] == 0 && (res[0][2] == 0 && res[0][1] == NOD((second_eigenvalues - first_eigenvalues),NOD(res[0][1], res[0][2])) || res[0][1] == 0)) {
+        if (res[1][2] == 0 && 
+            (res[0][2] == 0 && res[0][1] == NOD((second_eigenvalues - first_eigenvalues),NOD(res[0][1], res[0][2])) || res[0][1] == 0)) {
             printf(" a_1 = d = %d\n a_2 = 0\n a_3 = 0\n\n\n",
                 res[0][1] == 0 ? 0: NOD(second_eigenvalues - first_eigenvalues,NOD(res[0][1], res[0][2])));
             return res;
@@ -386,7 +390,8 @@ std::vector<std::vector<int>> Algorithm::algorithm(const std::vector<std::vector
                     a_3 = res[1][2];
                     printf("-(a_1 - rem) / 2 <= a_2 <= rem / 2\n");
                     res = multiplication_and_inverse_B(res, S_1, analog);
-                    if (res[0][1] != second_eigenvalues - first_eigenvalues - a_1 || res[0][2] != a_2 - e * a_1 - a_2 || res[0][1] != a_1 || res[1][2] != a_3) {
+                    if (res[0][1] != second_eigenvalues - first_eigenvalues - a_1 
+                        || res[0][2] != a_2 - e * a_1 - a_2 || res[0][1] != a_1 || res[1][2] != a_3) {
                         error("error -(a_1 - rem) / 2 <= a_2 <= rem / 2\n");
                     }
                     if (res[0][2] != third_rem - a_2) {
@@ -570,7 +575,8 @@ std::vector<std::vector<int>> Algorithm::algorithm(const std::vector<std::vector
                 (second_eigenvalues - first_eigenvalues) / 2,
                 third_eigenvalues - first_eigenvalues,
                 (third_eigenvalues - second_eigenvalues) / 2);
-        else if (res[0][1] != 0 && (third_eigenvalues - second_eigenvalues) % 2 == 0 && 0 <= res[1][2] && res[1][2] <= (third_eigenvalues - second_eigenvalues) / 2 - 1)
+        else if (res[0][1] != 0 && 
+            (third_eigenvalues - second_eigenvalues) % 2 == 0 && 0 <= res[1][2] && res[1][2] <= (third_eigenvalues - second_eigenvalues) / 2 - 1)
             printf("II.b.1\n 1 <= a_1 <= (beta - alpha) / 2 = %d\n 0 <= a_2 < gamma - alpha = %d\n 0 <= a_3 <= (gamma - beta) / 2 - 1 = %d\n\n\n",
                 (second_eigenvalues - first_eigenvalues) / 2,
                 third_eigenvalues - first_eigenvalues,
@@ -610,7 +616,8 @@ std::vector<std::vector<int>> Algorithm::algorithm(const std::vector<std::vector
                 T_4[2][2] = -1;
                 printf("-a_1 / 2 <= a_2 <= (gamma - alpha - a_1) / 2\n");
                 res = multiplication_and_inverse_B(res, T_4, analog);
-                if (res[0][1] != a_1 || res[0][2] != third_eigenvalues - first_eigenvalues - a_1 - a_2 || res[1][2] != third_eigenvalues - second_eigenvalues - a_3 || res[1][2] != a_3) {
+                if (res[0][1] != a_1 || res[0][2] != third_eigenvalues - first_eigenvalues - a_1 - a_2 || 
+                    res[1][2] != third_eigenvalues - second_eigenvalues - a_3 || res[1][2] != a_3) {
                     error("error - a_1 / 2 <= a_2 <= (gamma - alpha - a_1) / 2\n");
                 }
             }
@@ -826,7 +833,8 @@ std::vector<std::vector<int>> Algorithm::multiplication(const std::vector<std::v
     return mult;
 }
 
-std::vector<std::vector<int>> Algorithm::multiplication_and_inverse_B(const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b, std::vector<std::vector<int>>& analog) {
+std::vector<std::vector<int>> Algorithm::multiplication_and_inverse_B(const std::vector<std::vector<int>>& a, 
+    const std::vector<std::vector<int>>& b, std::vector<std::vector<int>>& analog) {
     std::vector<std::vector<int>> left_op;
     std::vector<std::vector<int>> right_op;
     std::vector<std::vector<int>> inverse_b = inverse_matrix(b);
@@ -952,7 +960,8 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
             two_col[min] = 0;
             two_col[(min + 1) % DIM] = u;
             two_col[(min + 2) % DIM] = v;
-            if (((abs(two_col[0]) == 1 || abs(two_col[1]) == 1) && two_col[2] != 0) || (two_col[0] != 0 && two_col[1] != 0) || ((two_col[0] == 0 && two_col[2] == 0) || (two_col[1] == 0 && two_col[2] == 0))) {
+            if (((abs(two_col[0]) == 1 || abs(two_col[1]) == 1) && two_col[2] != 0) || 
+                (two_col[0] != 0 && two_col[1] != 0) || ((two_col[0] == 0 && two_col[2] == 0) || (two_col[1] == 0 && two_col[2] == 0))) {
                 for (int i = 0; i < DIM; i++) {
                     uni[i][0] = xx[i];
                 }
