@@ -928,24 +928,21 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
             uni[i][0] = xx[i];
         }
         uni[0][1] = xx[2];
-        uni[1][1] = 0;
+        uni[1][1] = xx[0];//???
         uni[2][1] = 0;
         uni[2][2] = 0;
         uni[0][2] = 0;
         uni[1][2] = 1;
     }
     else {
-       while (true) {
+        while (true) {
             if (NOD(xx[(min + 1) % DIM], xx[(min + 2) % DIM]) != 1) {
                 min = (min + 1) % DIM;
                 if (NOD(xx[(min + 1) % DIM], xx[(min + 2) % DIM]) != 1) {
                     min = (min + 1) % DIM;
                     if (NOD(xx[(min + 1) % DIM], xx[(min + 2) % DIM]) != 1) {
-                        exit(-4);
+                        error("error min element\n");
                     }
-                }
-                else {
-                    min = (xx[(min) % DIM] > xx[(min + 1) % DIM]) ? (min + 1) % DIM : (min) % DIM;
                 }
             }
 
@@ -960,22 +957,7 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
             two_col[min] = 0;
             two_col[(min + 1) % DIM] = u;
             two_col[(min + 2) % DIM] = v;
-            if (((abs(two_col[0]) == 1 || abs(two_col[1]) == 1) && two_col[2] != 0) || 
-                (two_col[0] != 0 && two_col[1] != 0) || ((two_col[0] == 0 && two_col[2] == 0) || (two_col[1] == 0 && two_col[2] == 0))) {
-                for (int i = 0; i < DIM; i++) {
-                    uni[i][0] = xx[i];
-                }
-                uni[0][1] = -two_col[1];
-                uni[1][1] = two_col[0];
-                uni[2][1] = 0;
-                uni[2][2] = 1;
-
-                uni[0][2] = two_col[2] == 0 ? 0 : -v * two_col[2];
-                uni[1][2] = two_col[2] == 0 ? 0 : u * two_col[2];
-                break;
-            }
             if (two_col[0] == 0 && two_col[1] == 0) {
-               
                 for (int i = 0; i < DIM; i++) {
                     uni[i][0] = xx[i];
                 }
@@ -985,17 +967,54 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
                 uni[2][2] = 0;
                 uni[0][2] = 0;
                 uni[1][2] = 1;
+                break;
+            }
+            else if (!((abs(two_col[0]) > 1 || abs(two_col[1]) > 1) && two_col[2] != 0)) {
+                for (int i = 0; i < DIM; i++) {
+                    uni[i][0] = xx[i];
+                }
+                uni[0][1] = -two_col[1];
+                uni[1][1] = two_col[0];
+                uni[2][1] = 0;
+                uni[2][2] = 1;
+                uni[0][2] = two_col[2] == 0 ? 0 : -u * v; 
+                uni[1][2] = two_col[2] == 0 ? 0 : -u * v; 
+                break;
+            }
+            else if (abs(two_col[0]) > 1 && two_col[2] != 0) {
+                for (int i = 0; i < DIM; i++) {
+                    uni[i][0] = xx[i];
+                }
+                uni[0][1] = -two_col[1];
+                uni[1][1] = 1;
+                uni[2][1] = 0;
+                uni[2][2] = two_col[0];
+                uni[0][2] = -two_col[2];
+                uni[1][2] = 0;
+                break;
+            }
+            else {
+                for (int i = 0; i < DIM; i++) {
+                    uni[i][0] = xx[i];
+                }
+                uni[0][1] = 1;
+                uni[1][1] = two_col[0];
+                uni[2][1] = 0;
+                uni[2][2] = -two_col[1];
+                uni[0][2] = 0;
+                uni[1][2] = two_col[2];
+                break;
             }
 
-            if (abs(xx[(min) % DIM]) == abs(xx[(min + 1) % DIM])) {
+            if (abs(xx[min % DIM]) == abs(xx[(min + 1) % DIM])) {
                 min = (min + 1) % DIM;
             }
-            else if (abs(xx[(min) % DIM]) == abs(xx[(min + 2) % DIM])) {
+            else if (abs(xx[min % DIM]) == abs(xx[(min + 2) % DIM])) {
                 min = (min + 2) % DIM;
             }
             else
-            min = abs(xx[(min + 1) % DIM]) < abs(xx[(min + 2) % DIM]) ? (min + 1) % DIM : (min + 2) % DIM;
-            
+                min = abs(xx[(min + 1) % DIM]) < abs(xx[(min + 2) % DIM]) ? (min + 1) % DIM : (min + 2) % DIM;
+
         }
 
         // --_--

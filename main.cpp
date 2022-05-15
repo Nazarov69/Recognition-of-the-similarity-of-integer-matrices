@@ -126,7 +126,7 @@ int main() {
 	vector[2][1] = 0;
 	vector[2][2] = 0;*/
 
-	vector[0][0] = 8;
+	/*vector[0][0] = 8;
 	vector[0][1] = 0;
 	vector[0][2] = 2;
 	vector[1][0] = 0;
@@ -134,7 +134,7 @@ int main() {
 	vector[1][2] = 2;
 	vector[2][0] = 0;
 	vector[2][1] = 4;
-	vector[2][2] = 1;
+	vector[2][2] = 1;*/
 
 	/*vector[0][0] = 2;
 	vector[0][1] = 0;
@@ -145,6 +145,16 @@ int main() {
 	vector[2][0] = 0;
 	vector[2][1] = 0;
 	vector[2][2] = 0;*/
+
+	vector[0][0] = 7;
+	vector[0][1] = 0;
+	vector[0][2] = 7;
+	vector[1][0] = 3;
+	vector[1][1] = 11;
+	vector[1][2] = 0;
+	vector[2][0] = 0;
+	vector[2][1] = 0;
+	vector[2][2] = 6;
 
 
 	/*printf("input matrix :\n");
