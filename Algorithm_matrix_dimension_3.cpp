@@ -928,7 +928,7 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
             uni[i][0] = xx[i];
         }
         uni[0][1] = xx[2];
-        uni[1][1] = xx[0];//???
+        uni[1][1] = 0;
         uni[2][1] = 0;
         uni[2][2] = 0;
         uni[0][2] = 0;
