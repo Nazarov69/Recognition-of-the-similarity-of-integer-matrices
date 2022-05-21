@@ -156,6 +156,16 @@ int main() {
 	vector[2][1] = 0;
 	vector[2][2] = 6;
 
+	//vector[0][0] = 1;
+	//vector[0][1] = 2;
+	//vector[0][2] = -7;
+	//vector[1][0] = 0;
+	//vector[1][1] = 1;
+	//vector[1][2] = 3;
+	//vector[2][0] = 0;
+	//vector[2][1] = 0;
+	//vector[2][2] = 1;
+
 
 	/*printf("input matrix :\n");
 	for (int i = 0; i < DIM; i++) {

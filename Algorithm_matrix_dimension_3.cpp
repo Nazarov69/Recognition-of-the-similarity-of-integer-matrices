@@ -1223,7 +1223,7 @@ std::vector<int> Algorithm::gauss(const std::vector<std::vector<int>>& _matrix) 
         /*if (-(gss[1][2] * xx[2]) % gss[1][1] != 0) {
             error("can't find eigenvector\n");
         }*/
-        xx[1] = x[1] == 0 ? 0 : (xx[2] != 0 ? (-gss[1][2] * xx[2] / gss[1][1]) : gss[1][1] == 0 ? 1 : 0);
+        xx[1] = x[1] == 0 ? 0 : (xx[2] != 0 ? (-gss[1][2] * xx[2] / gss[1][1]) : 0); //: gss[1][1] == 0 ? 1 : 0);
         if (gss[0][0] != 0) {
             if (-(gss[0][1] * xx[1] + gss[0][2] * xx[2]) % gss[0][0] != 0) {
                 xx[0] = -(gss[0][1] * xx[1] + gss[0][2] * xx[2]);
