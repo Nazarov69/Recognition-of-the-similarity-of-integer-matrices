@@ -643,29 +643,6 @@ std::vector<std::vector<int>> Algorithm::algorithm(const std::vector<std::vector
     return result;
 }
 
-bool Algorithm::pair(int a, int b, int c) {
-    if (a == b && a != c) return true;
-    if (a == c && a != b) return true;
-    if (b == c && b != a) return true;
-    return false;
-}
-
-bool Algorithm::no_pair(int a, int b, int c) {
-    if (a != b && a != c && b != c) return true;
-    return false;
-}
-
-int Algorithm::get_det_2_2(const int& a, const int& b, const int& c,
-    const int& d) {
-    return a * d - b * c;
-}
-
-int Algorithm::get_det_3_3(const std::vector<std::vector<int>>& matr) {
-    return matr[0][0] * get_det_2_2(matr[1][1], matr[1][2], matr[2][1], matr[2][2]) -
-        matr[0][1] * get_det_2_2(matr[1][0], matr[1][2], matr[2][0], matr[2][2]) +
-        matr[0][2] * get_det_2_2(matr[1][0], matr[1][1], matr[2][0], matr[2][1]);
-}
-
 void Algorithm::get_eigenvalues(const std::vector<std::vector<int>>& matr) {
     int** num = new int* [3];
     num[0] = &first_eigenvalues;
@@ -767,135 +744,8 @@ void Algorithm::get_eigenvalues(const std::vector<std::vector<int>>& matr) {
     }
 }
 
-int Algorithm::get_multiplicity(const int elem) {
-    std::vector<int> coeffs;
-    coeffs.push_back(first_coefficient);
-    coeffs.push_back(second_coefficient);
-    coeffs.push_back(third_coefficient);
-    coeffs.push_back(fourth_coefficient);
-    int multiplicity = 0;
-    while (true) {
-        for (int i = 1; i < coeffs.size(); i++) {
-            coeffs[i] = elem * coeffs[i - 1] + coeffs[i];
-        }
-        if (coeffs[coeffs.size() - 1] == 0) {
-            coeffs.erase(coeffs.begin() + coeffs.size() - 1);
-            multiplicity++;
-        }
-        else {
-            break;
-        }
-    }
-    return multiplicity;
-}
-
 void Algorithm::print_coeffs() {
     printf("%d\n%d\n%d\n%d\n", first_coefficient, second_coefficient, third_coefficient, fourth_coefficient);
-}
-
-int Algorithm::NOD(int a, int b) {
-    while (b != 0) {
-        int c = a % b;
-        a = b;
-        b = c;
-    }
-    return abs(a);
-}
-
-int Algorithm::gcd(int a, int b, int& x, int& y) {
-    int nod = NOD(a, b);
-    while (nod != 1) {
-        a /= nod;
-        b /= nod;
-        nod = NOD(a, b);
-    }
-    if (a == 0) {
-        x = 0;
-        y = 1;
-        return b;
-    }
-    int x1, y1;
-    int d = gcd(b % a, a, x1, y1);
-    x = y1 - b / a * x1;
-    y = x1;
-    return d;
-}
-
-std::vector<std::vector<int>> Algorithm::multiplication(const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b) {
-    std::vector<std::vector<int>> mult(DIM, std::vector<int>(DIM));
-    for (int i = 0; i < DIM; i++) {
-        for (int j = 0; j < DIM; j++) {
-            for (int k = 0; k < DIM; k++) {
-                mult[i][j] += a[i][k] * b[k][j];
-            }
-        }
-    }
-    return mult;
-}
-
-std::vector<std::vector<int>> Algorithm::multiplication_and_inverse_B(const std::vector<std::vector<int>>& a, 
-    const std::vector<std::vector<int>>& b, std::vector<std::vector<int>>& analog) {
-    std::vector<std::vector<int>> left_op;
-    std::vector<std::vector<int>> right_op;
-    std::vector<std::vector<int>> inverse_b = inverse_matrix(b);
-    for (int i = 0; i < DIM; i++) {
-        for (int j = 0; j < DIM; j++)
-            inverse_b[i][j] < 0 ? printf("%d ", inverse_b[i][j]) : printf("%d  ", inverse_b[i][j]);
-        printf("|\t\t\t");
-        for (int j = 0; j < DIM; j++)
-            a[i][j] < 0 ? printf("%d ", a[i][j]) : printf("%d  ", a[i][j]);
-        printf("|\t\t\t");
-        for (int j = 0; j < DIM; j++)
-            b[i][j] < 0 ? printf("%d ", b[i][j]) : printf("%d  ", b[i][j]);
-        printf("\t|\t=\n");
-    }
-    left_op = multiplication(inverse_b, a);
-
-    right_op = multiplication(left_op, b);
-    analog = multiplication(analog, b);
-    printf("similar matrix :\n");
-    for (int i = 0; i < DIM; i++) {
-        for (int j = 0; j < DIM; j++)
-            right_op[i][j] < 0 ? printf("%d ", right_op[i][j]) : printf("%d  ", right_op[i][j]);
-        printf("\t|\t\t\n");
-    }
-    printf("\n");
-    return right_op;
-}
-
-std::vector<std::vector<int>> Algorithm::inverse_matrix(const std::vector<std::vector<int>>& matr) {
-    std::vector<std::vector<int>> inverse(DIM, std::vector<int>(DIM));
-    inverse = matr;
-    int det = get_det_3_3(matr);
-    if (det != 1 && det != -1) {
-        exit(777);
-    }
-
-    for (int i = 0, row, col; i < DIM; i++, row *= 2) {
-        row = 1;
-        col = 1;
-        for (int j = 0; j < DIM; j++, col *= 2) {
-            inverse[i][j] =
-                pow(-1, i + j) *
-                get_det_2_2(matr[i == 1 ? 0 : ((i + 1) % DIM)][j == 1 ? 0 : ((j + 1) % DIM)],
-                    matr[i == 1 ? 0 : ((i + 1) % DIM)][j == 1 ? 2 : ((j + 2) % DIM)],
-                    matr[i == 1 ? 2 : ((i + 2) % DIM)][j == 1 ? 0 : ((j + 1) % DIM)],
-                    matr[i == 1 ? 2 : ((i + 2) % DIM)][j == 1 ? 2 : ((j + 2) % DIM)]);
-        }
-    }
-
-    std::swap(inverse[1][0], inverse[0][1]);
-    std::swap(inverse[2][0], inverse[0][2]);
-    std::swap(inverse[2][1], inverse[1][2]);
-
-    if (det == -1) {
-        for (int i = 0, k; i < DIM; i++) {
-            for (int j = 0; j < DIM; j++) {
-                inverse[i][j] /= det;
-            }
-        }
-    }
-    return inverse;
 }
 
 std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std::vector<int>>& matr) {
@@ -916,7 +766,7 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
     std::vector<int> two_col(DIM);
 
     int min = 0;
-    if (abs(xx[min]) > abs(xx[1])) { 
+    if (abs(xx[min]) > abs(xx[1])) {
         min = 1;
     }
     if (abs(xx[min]) > abs(xx[2])) {
@@ -941,7 +791,59 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
                 if (NOD(xx[(min + 1) % DIM], xx[(min + 2) % DIM]) != 1) {
                     min = (min + 1) % DIM;
                     if (NOD(xx[(min + 1) % DIM], xx[(min + 2) % DIM]) != 1) {
-                        error("error min element\n");
+                        if (NOD(NOD(xx[0], xx[1]), xx[2]) == 1) {
+                            int d_1 = NOD(xx[0], xx[1]);
+                            std::vector<std::vector<int>> S(3, std::vector<int>(3));
+                            gcd(xx[0], xx[1], S[0][0], S[0][1]);
+                            int det = get_det_2_2(S[0][0], S[0][1], -xx[1], xx[0]);
+                            if (det != d_1) {
+                                S[0][0] = -S[0][0];
+                                S[0][1] = -S[0][1];
+                                det = get_det_2_2(S[0][0], S[0][1], -xx[1], xx[0]);
+                                if (det != d_1) {
+                                    error("error NOD(a, b) where eigenvector = (a, b, c)\n");
+                                }
+                            }
+                            S[1][0] = -xx[1] / d_1;
+                            S[1][1] = xx[0] / d_1;
+                            S[2][2] = 1;
+                            std::vector<std::vector<int>> S_1(1, std::vector<int>(3));
+                            std::vector<std::vector<int>> evec({ {xx[0]}, {xx[1]}, {xx[2]} });
+                            S_1 = multiplication(S, evec);
+                            if (S_1[0][0] != d_1 || S_1[1][0] != 0 || S_1[2][0] != xx[2]) {
+                                error("matrix search error\n");
+                            }
+
+                            int d_2 = NOD(d_1, xx[2]);
+                            std::vector<std::vector<int>> S_2(3, std::vector<int>(3));
+                            gcd(d_1, xx[2], S_2[0][0], S_2[0][2]);
+                            int det_2 = get_det_2_2(S_2[0][0], S_2[0][2], -xx[2], d_1);
+                            if (det_2 != 1) {
+                                S_2[0][0] = -S_2[0][0];
+                                S_2[0][2] = -S_2[0][2];
+                                det_2 = get_det_2_2(S_2[0][0], S_2[0][2], -xx[2], d_1);
+                                if (det_2 != 1) {
+                                    error("error NOD(a, b, c) where eigenvector = (a, b, c)\n");
+                                }
+                            }
+                            S_2[1][1] = 1;
+                            S_2[2][0] = -xx[2];
+                            S_2[2][2] = d_1;
+                            std::vector<std::vector<int>> S_3(1, std::vector<int>(3));
+                            S_3 = multiplication(S_2, S_1);
+                            if (S_3[0][0] != 1 || S_3[1][0] != 0 || S_3[2][0] != 0) {
+                                error("matrix search error\n");
+                            }
+
+                            std::vector<std::vector<int>> SS(3, std::vector<int>(3));
+                            SS = multiplication(S_2, S);
+                            uni = inverse_matrix(SS);
+
+                            if (uni[0][0] != xx[0] || uni[1][0] != xx[1] || uni[2][0] != xx[2]) {
+                                error("unimodular matrix error\n");
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -977,8 +879,8 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
                 uni[1][1] = two_col[0];
                 uni[2][1] = 0;
                 uni[2][2] = 1;
-                uni[0][2] = two_col[2] == 0 ? 0 : -u * v; 
-                uni[1][2] = two_col[2] == 0 ? 0 : -u * v; 
+                uni[0][2] = two_col[2] == 0 ? 0 : -u * v;
+                uni[1][2] = two_col[2] == 0 ? 0 : -u * v;
                 break;
             }
             else if (abs(two_col[0]) > 1 && two_col[2] != 0) {
@@ -1018,7 +920,7 @@ std::vector<std::vector<int>> Algorithm::get_unimod_matrix(const std::vector<std
         }
 
         // --_--
- 
+
     }
     printf("multiplication by the first unimodular matrix\n");
     return uni;
@@ -1042,7 +944,7 @@ std::vector<std::vector<int>> Algorithm::get_two_uni(const std::vector<std::vect
         sub_eigenvalue_2 = (-polynomial_A2 + determinant) / 2;
     }
     else {
-       error("not all integer eigenvalues\n");
+        error("not all integer eigenvalues\n");
     }
 
     sub_eigenvalue = std::min(sub_eigenvalue_1, sub_eigenvalue_2);
@@ -1107,7 +1009,7 @@ std::vector<int> Algorithm::gauss(const std::vector<std::vector<int>>& _matrix) 
                 iter++;
                 continue;
             }
-            
+
         }
 
         if (k1 == k2 && k2 == k3) {
@@ -1122,7 +1024,7 @@ std::vector<int> Algorithm::gauss(const std::vector<std::vector<int>>& _matrix) 
         int nd = (NOD(NOD(gss[i][0], gss[i][1]), gss[i][2]));
         for (int j = 0; j < DIM; j++) {
             if (nd != 0) gss[i][j] /= nd;
-           // printf("%d  ", gss[i][j]);
+            // printf("%d  ", gss[i][j]);
         }
         //printf("\n");
     }
@@ -1163,8 +1065,8 @@ std::vector<int> Algorithm::gauss(const std::vector<std::vector<int>>& _matrix) 
             }
         }
         d = gss[k][k];
-        if(gss[k + 1][k + 1] != 0)
-        if (k + 1 < DIM - 1) gss[k][k] = abs(gss[k + 1][k + 1]);
+        if (gss[k + 1][k + 1] != 0)
+            if (k + 1 < DIM - 1) gss[k][k] = abs(gss[k + 1][k + 1]);
         k++;
 
     }
@@ -1263,4 +1165,158 @@ down:
     printf("%d)^T\n\n", xx[2]);
 
     return xx;
+}
+
+int Algorithm::get_multiplicity(const int elem) {
+    std::vector<int> coeffs;
+    coeffs.push_back(first_coefficient);
+    coeffs.push_back(second_coefficient);
+    coeffs.push_back(third_coefficient);
+    coeffs.push_back(fourth_coefficient);
+    int multiplicity = 0;
+    while (true) {
+        for (int i = 1; i < coeffs.size(); i++) {
+            coeffs[i] = elem * coeffs[i - 1] + coeffs[i];
+        }
+        if (coeffs[coeffs.size() - 1] == 0) {
+            coeffs.erase(coeffs.begin() + coeffs.size() - 1);
+            multiplicity++;
+        }
+        else {
+            break;
+        }
+    }
+    return multiplicity;
+}
+
+int NOD(int a, int b) {
+    while (b != 0) {
+        int c = a % b;
+        a = b;
+        b = c;
+    }
+    return abs(a);
+}
+
+int gcd(int a, int b, int& x, int& y) {
+    int nod = NOD(a, b);
+    while (nod != 1) {
+        a /= nod;
+        b /= nod;
+        nod = NOD(a, b);
+    }
+    if (a == 0) {
+        x = 0;
+        y = 1;
+        return b;
+    }
+    int x1, y1;
+    int d = gcd(b % a, a, x1, y1);
+    x = y1 - b / a * x1;
+    y = x1;
+    return d;
+}
+
+int get_det_2_2(const int& a, const int& b, const int& c,
+    const int& d) {
+    return a * d - b * c;
+}
+
+int get_det_3_3(const std::vector<std::vector<int>>& matr) {
+    return matr[0][0] * get_det_2_2(matr[1][1], matr[1][2], matr[2][1], matr[2][2]) -
+        matr[0][1] * get_det_2_2(matr[1][0], matr[1][2], matr[2][0], matr[2][2]) +
+        matr[0][2] * get_det_2_2(matr[1][0], matr[1][1], matr[2][0], matr[2][1]);
+}
+
+std::vector<std::vector<int>> multiplication(const std::vector<std::vector<int>>& a, const std::vector<std::vector<int>>& b) {
+    std::vector<std::vector<int>> mult(a.size(), std::vector<int>(b[0].size()));
+    for (int i = 0; i < a.size(); i++) {
+        for (int j = 0; j < b[0].size(); j++) {
+            for (int k = 0; k < DIM; k++) {
+                mult[i][j] += a[i][k] * b[k][j];
+            }
+        }
+    }
+    return mult;
+}
+
+std::vector<std::vector<int>> multiplication_and_inverse_B(const std::vector<std::vector<int>>& a,
+    const std::vector<std::vector<int>>& b, std::vector<std::vector<int>>& analog) {
+    std::vector<std::vector<int>> left_op;
+    std::vector<std::vector<int>> right_op;
+    std::vector<std::vector<int>> inverse_b = inverse_matrix(b);
+    for (int i = 0; i < DIM; i++) {
+        for (int j = 0; j < DIM; j++)
+            inverse_b[i][j] < 0 ? printf("%d ", inverse_b[i][j]) : printf("%d  ", inverse_b[i][j]);
+        printf("|\t\t\t");
+        for (int j = 0; j < DIM; j++)
+            a[i][j] < 0 ? printf("%d ", a[i][j]) : printf("%d  ", a[i][j]);
+        printf("|\t\t\t");
+        for (int j = 0; j < DIM; j++)
+            b[i][j] < 0 ? printf("%d ", b[i][j]) : printf("%d  ", b[i][j]);
+        printf("\t|\t=\n");
+    }
+    left_op = multiplication(inverse_b, a);
+
+    right_op = multiplication(left_op, b);
+    analog = multiplication(analog, b);
+    printf("similar matrix :\n");
+    for (int i = 0; i < DIM; i++) {
+        for (int j = 0; j < DIM; j++)
+            right_op[i][j] < 0 ? printf("%d ", right_op[i][j]) : printf("%d  ", right_op[i][j]);
+        printf("\t|\t\t\n");
+    }
+    printf("\n");
+    return right_op;
+}
+
+std::vector<std::vector<int>> inverse_matrix(const std::vector<std::vector<int>>& matr) {
+    std::vector<std::vector<int>> inverse(DIM, std::vector<int>(DIM));
+    inverse = matr;
+    int det = get_det_3_3(matr);
+    if (det != 1 && det != -1) {
+        exit(777);
+    }
+
+    for (int i = 0, row, col; i < DIM; i++, row *= 2) {
+        row = 1;
+        col = 1;
+        for (int j = 0; j < DIM; j++, col *= 2) {
+            inverse[i][j] =
+                pow(-1, i + j) *
+                get_det_2_2(matr[i == 1 ? 0 : ((i + 1) % DIM)][j == 1 ? 0 : ((j + 1) % DIM)],
+                    matr[i == 1 ? 0 : ((i + 1) % DIM)][j == 1 ? 2 : ((j + 2) % DIM)],
+                    matr[i == 1 ? 2 : ((i + 2) % DIM)][j == 1 ? 0 : ((j + 1) % DIM)],
+                    matr[i == 1 ? 2 : ((i + 2) % DIM)][j == 1 ? 2 : ((j + 2) % DIM)]);
+        }
+    }
+
+    std::swap(inverse[1][0], inverse[0][1]);
+    std::swap(inverse[2][0], inverse[0][2]);
+    std::swap(inverse[2][1], inverse[1][2]);
+
+    if (det == -1) {
+        for (int i = 0, k; i < DIM; i++) {
+            for (int j = 0; j < DIM; j++) {
+                inverse[i][j] /= det;
+            }
+        }
+    }
+    return inverse;
+}
+
+bool pair(int a, int b, int c) {
+    if (a == b && a != c) return true;
+    if (a == c && a != b) return true;
+    if (b == c && b != a) return true;
+    return false;
+}
+
+bool no_pair(int a, int b, int c) {
+    if (a != b && a != c && b != c) return true;
+    return false;
+}
+
+int get_integer(int a, int b) {
+    return a < 0 && a % b != 0 ? (b < 0 ? a / b + 1 : (a / b) - 1) : a / b;
 }
