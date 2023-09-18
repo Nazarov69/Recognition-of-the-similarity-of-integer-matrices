@@ -1,0 +1,921 @@
+ERRORS = 0;
+NOROOTS = 0;
+COUNT = 0;
+TRUE_COMPARE = 0;
+TRUE_UNIMODULAR = 0;
+FALSE_COMPARE = 0;
+FALSE_UNIMODULAR = 0;
+default(timer, 1);
+find_lambda(matr) = {
+    	local(poly, count, lambda, global_ind);
+
+    	poly = charpoly(matr);
+    	count = matsize(factor(poly))[1];
+    
+    	lambda = List();
+    	global_ind = 1;
+	    for(i = 1, count,
+		    if(poldegree(factor(poly)[i,1]) == 1,
+                for(j = 1, factor(poly, 0)[i,2],
+                    listput(lambda, -polcoef(factor(poly)[i,1], 0), global_ind);
+                	global_ind++;
+            	);
+        	);
+    	);
+    
+    	lambda = vecsort(lambda);
+    	if(length(lambda) == 3 && lambda[1] == lambda[2] && lambda[1] != lambda[3],
+        	lambda[1] = lambda[3];
+        	lambda[3] = lambda[2];
+    	);
+    
+    	return(lambda);
+}
+
+algorithm2 = (matr) -> {
+	local(unimodular, lambda, matr_b, vec, p, uni, result, T, r, S);
+
+	unimodular = [1,0;0,1];
+   	lambda = find_lambda(matr);
+    
+   	if(length(lambda) > 0,
+		matr_b = matr - lambda[1]*matdiagonal([1,1]);
+     	   	vec = matker(matr_b);
+     		p = matsnf(vec, 1)[1];
+      	  	uni = 1/matdet(p)*matadjoint(p)*[0,1;1,0];
+      	  	result = 1/matdet(uni)*matadjoint(uni)*matr*uni;
+        	unimodular *= uni,
+        
+        	print("matrix without roots\n");
+        	return(0);
+    	);
+    
+    	if(result[1,2] < 0, 
+        	T = [-1,0;0,1];
+        	result = 1/matdet(T)*matadjoint(T)*result*T;
+        	unimodular *= T;
+        	if(result[1,2] < 0, 
+            		print("error c >= 0\n");
+            		return(-1);
+        	);
+    	);
+
+    	if(lambda[1] != lambda[2],
+        	if(result[1,2] >= result[2,2] - result[1,1],
+            		T = [1,divrem(result[1,2], result[2,2] - result[1,1])[1];0,1];
+            		r = divrem(result[1,2], result[2,2] - result[1,1])[2];
+            		result = 1/matdet(T)*matadjoint(T)*result*T;
+            		unimodular *= T;
+            
+            		if(result[1,2] != r,
+                		print("error c = r\n");
+                		return(-1);
+            		);
+		    );
+
+		    if(result[1,2] > divrem(result[2,2] - result[1,1],2)[1],
+		        S = [1,-1;0,-1];
+                r = result[1,2];
+                result = 1/matdet(S)*matadjoint(S)*result*S;
+                unimodular *= S;
+            
+                if(result[1,2] != result[2,2] - result[1,1] - r,
+                    print("error c = beta - alpha - r\n");
+                    return(-1);
+        	    );
+    	    );
+        );
+
+    
+    	return([result, unimodular]);
+}
+
+algorithm = (matr) -> {
+	local(unimodular, lambda, matr_b, vec, p, uni, result, sub_matr, sub_lambda, sub_matr_b, sub_vec, sub_p, s, sub_uni, a1, a2, a3, first, second, third, r1, r2, q, S, res, lambda1, lambda2, lambda3, E_3, T_1, T_2, second_integer, second_rem, x_1, y_1, x, y, T_3, T_4, z, S_1, T, t_1, t_2, H, e, third_integer, S_3, S_4, first_integer, first_rem, third_rem, S_2, T_5);
+	
+    unimodular = [1,0,0;0,1,0;0,0,1];
+    lambda = find_lambda(matr);
+    
+    if(length(lambda) > 0,
+        matr_b = matr - lambda[1]*matdiagonal([1,1,1]);
+        vec = matker(matr_b);
+        p = matsnf(vec, 1)[1];
+        uni = 1/matdet(p)*matadjoint(p)*[0,0,1;0,1,0;1,0,0];
+        result = 1/matdet(uni)*matadjoint(uni)*matr*uni;
+        unimodular *= uni;
+        
+        sub_matr = matrix(2,2);
+        for(i = 1, 2, for(j = 1, 2, sub_matr[i, j] = result[i + 1, j + 1]));
+        
+        sub_lambda = find_lambda(sub_matr);
+
+        if(length(sub_lambda) > 0,
+            	sub_matr_b = sub_matr - sub_lambda[1]*matdiagonal([1,1]);
+            	sub_vec = matker(sub_matr_b);
+            	sub_p = matsnf(sub_vec, 1)[1];
+            	s = 1/matdet(sub_p)*matadjoint(sub_p)*[0,1;1,0];
+            	sub_uni = [1,0,0;0,s[1,1],s[1,2];0,s[2,1],s[2,2]];
+            	result = 1/matdet(sub_uni)*matadjoint(sub_uni)*result*sub_uni;
+            	unimodular *= sub_uni,
+		if(charpoly([result[2,2], result[2,3]; result[3,2], result[3,3]]) != charpoly(sub_matr) || result[1,1] != lambda[1] || result[2,1] != 0 || result[3,1] != 0,
+                	print("error a_1 = r1 and a_2 = r2\n");
+                	return(-1);
+            	);
+            	a1 = result[1,2];
+            	a2 = result[1,3];
+            	first = 1;
+            	second = -(sub_matr[1,1] + sub_matr[2,2]);
+            	third = matdet(sub_matr);
+            	r1 = divrem(a1, first*lambda[1]*lambda[1] + second*lambda[1] + third)[2];
+            	r2 = divrem(a2, first*lambda[1]*lambda[1] + second*lambda[1] + third)[2];
+            	q = ([a1, a2] - [r1, r2])*(1/matdet(sub_matr - lambda[1]*[1,0;0,1])*matadjoint(sub_matr - lambda[1]*[1,0;0,1]));
+            	S = [1,q[1],q[2];0,1,0;0,0,1];
+            	res = 1/matdet(S)*matadjoint(S)*result*S;
+            	unimodular *= S;
+            	if (matdet(S) != 1 || res[1,2] != r1 || res[1,3] != r2,
+                	print("error a_1 = r1 and a_2 = r2\n");
+                	return(-1);
+            	);
+            	print("I\n a_1 = r1\n a_2 = r2\n\n\n");
+            	return([res, unimodular]); 
+        ),
+        
+        print("matrix without roots\n");
+        return(0);
+    );
+    
+    lambda1 = lambda[1];
+    lambda2 = lambda[2];
+    lambda3 = lambda[3];
+    
+    local(d, S, A, B, u, v, inverse_S, E, nod, integer, rem, q, e, det);
+    
+    if (lambda1 == lambda2 && lambda1 == lambda3 && lambda2 == lambda3,
+    
+        if (result[1,2] == 0 && result[1,3] == 0 && result[2,3] == 0,
+            print("I\n a_1 = 0\n a_2 = 0\n a_3 = 0\n\n\n");
+            return([result, unimodular]);
+        );
+        
+        if (result[1,2] == 0 && (result[1,3] != 0 || result[2,3] != 0),
+            d = gcd(result[1,3], result[2,3]);
+            S = matrix(3,3);
+            S[1,1] = divrem(result[2,3], d)[1];
+            S[1,2] = -divrem(result[1,3], d)[1];
+            S[3,3] = 1;
+            A = matsnf([-result[1,3];result[2,3]], 1)[1];
+            B = 1/matdet(A)*matadjoint(A)*[0,1;1,0];
+            u = B[2,2];
+            v = B[1,2];
+            if (matdet([S[1,1], S[1,2]; u, v]) == -1,
+                u = -u;
+                v = -v;
+                if (matdet([S[1,1], S[1,2]; u, v]) == -1,
+                    print("error u * a_2 + v * a_3 = d\n");
+                    return(-1);
+                );
+            );
+            S[2,1] = u;
+            S[2,2] = v;
+            inverse_S = 1/matdet(S)*matadjoint(S);
+            res = 1/matdet(inverse_S)*matadjoint(inverse_S)*result*inverse_S;
+            unimodular *= inverse_S;
+            if (res[1,2] != 0 || res[1,3] != 0 || res[2,3] != d,
+                print("error a_1 = 0 and a_2 = 0 and a_3 = NOD(a_2, a_3)\n");
+                return(-1);
+            );
+            print("II\n a_1 = 0\n a_2 = 0\n a_3 >= 1\n\n\n");
+            return([res, unimodular]);
+        );
+        
+        if ((result[1,2] != 0 || result[1,3] != 0) && result[2,3] == 0,
+            d = gcd(result[1,2], result[1,3]);
+            S = matrix(3,3);
+            S[1,2] = 1;
+            S[2,1] = divrem(result[1,3], d)[1];
+            S[3,1] = -divrem(result[1,2], d)[1];
+            A = matsnf([-result[1,2]; result[1,3]], 1)[1];
+            B = 1/matdet(A)*matadjoint(A)*[0,1;1,0];
+            u = B[2,2];
+            v = B[1,2];
+            if (matdet([S[2,1], u; S[3,1], v]) == -1,
+                u = -u;
+                v = -v;
+                if (matdet([S[2,1], u; S[3,1], v]) == -1,
+                    print("error a_1 * u + a_2 * v = d\n");
+                    return(-1);
+                );
+            );
+            S[2,3] = u;
+            S[3,3] = v;
+            res = 1/matdet(S)*matadjoint(S)*result*S;
+            unimodular *= S;
+            if (res[1,2] != 0 || res[1,3] != 0 || res[2,3] != d,
+                print("error a_1 = 0 and a_2 = 0 and a_3 = NOD(a_1, a_2)\n");
+                return(-1);
+            );
+            print("II\n a_1 = 0\n a_2 = 0\n a_3 >= 1\n\n\n");
+            return([res, unimodular]);
+        );
+        
+        if (result[1,2] != 0 || result[2,3] != 0,
+            E = matrix(3,3);
+            for (i = 1, 3, E[i,i] = 1);
+            
+            if (result[1,2] < 0 && result[2,3] > 0,
+                E[1,1] = -1;
+                res = 1/matdet(E)*matadjoint(E)*result*E;
+                unimodular *= E;
+                if (res[1,2] < 0,
+                    print("error a_1 > 0\n");
+                    return(-1);
+                ),
+            if (result[1,2] > 0 && result[2,3] < 0,
+                E[3,3] = -1;
+                res = 1/matdet(E)*matadjoint(E)*result*E;
+                unimodular *= E;
+                if (res[2,3] < 0,
+                    print("error a_3 > 0\n");
+                    return(-1);
+                ),
+            if (result[1,2] < 0 && result[2,3] < 0,
+                E[2,2] = -1;
+                res = 1/matdet(E)*matadjoint(E)*result*E;
+                unimodular *= E;
+                if (res[1,2] < 0 || res[2,3] < 0,
+                    print("error a_1 > 0 and a_3 > 0\n");
+                    return(-1);
+                ),
+            res = result)));
+            
+            S = matrix(3,3);
+            for (i = 1, 3, S[i,i] = 1);
+            nod = gcd(res[1,2], res[2,3]);
+            integer = divrem(res[1,3], nod)[1];
+            rem = divrem(res[1,3], nod)[2];
+            A = matsnf([res[1,2];res[2,3]], 1)[1];
+            B = 1/matdet(A)*matadjoint(A)*[0,1;1,0];
+            e = B[2,2];
+            q = B[1,2];
+            det = matdet([res[1,2] * integer, q; res[2,3] * integer, e]);
+            if (det != rem - res[1,3] || det != nod * integer * (-1),
+                e = -e;
+                q = -q;
+                det = matdet([res[1,2] * integer, q; res[2,3] * integer, e]);
+                if (det != rem - res[1,3] || det != nod * integer * (-1),
+                    print("error a_1 * e - a_3 * q = r - a_2 = -ds\n");
+                    return(-1);
+                );
+            );
+            S[1,2] = q * integer;
+            S[2,3] = e * integer;
+            res = 1/matdet(S)*matadjoint(S)*res*S;
+            unimodular *= S;
+            if (0 > rem || rem >= nod || res[1,3] != rem,
+                print("error 0 <= a_2 < NOD(a_1, a_3)\n");
+                return(-1);
+            );
+            print("III\n a_1 >= 1\n 0 <= a_2 < NOD(a_1, a_3) = "nod"\n a_3 >= 1\n\n\n");
+            return([res, unimodular]);
+        );
+        return([result, unimodular]);
+    );
+    
+    if (lambda1 != lambda2 && lambda2 == lambda3,
+        res = result;
+        if (res[2,3] < 0,
+            E_3 = [1,0,0;0,1,0;0,0,-1];
+            res = 1/matdet(E_3)*matadjoint(E_3)*res*E_3;
+            unimodular *= E_3;
+            if (res[2,3] < 0,
+                print("error a_3 > 0\n");
+                return(-1);
+            );
+        );
+        first_integer = divrem(res[1,2], lambda2 - lambda1)[1];
+        first_rem = divrem(res[1,2], lambda2 - lambda1)[2];
+
+	    a_1 = res[1,2];
+        a_2 = res[1,3];
+        a_3 = res[2,3];
+
+        if (res[1,2] >= abs(lambda2 - lambda1) || res[1,2] < 0,
+            if (first_rem < 0 || first_rem >= abs(lambda2 - lambda1),
+                print("error 0 <= rem < |beta - alpha|\n");
+                return(-1);
+            );
+            S = [1,first_integer,0;0,1,0;0,0,1];
+            res = 1/matdet(S)*matadjoint(S)*res*S;
+            unimodular *= S;
+            if (res[1,2] != first_rem || res[1,3] != a_2 - a_3 * first_integer,
+                print("error 0 <= a_1 < |beta - alpha|\n");
+                return(-1);
+            );
+        );
+
+        if (res[1,2] < 0 || res[1,2] > divrem(abs(lambda2 - lambda1),2)[1],
+            if (lambda2 - lambda1 > 0,
+                T_1 =[1,-1,0;0,-1,0;0,0,-1];
+                res = 1/matdet(T_1)*matadjoint(T_1)*res*T_1;
+                unimodular *= T_1;
+                if (res[1,2] != lambda2 - lambda1 - first_rem || res[1,3] != a_3 - a_2 + a_3 * first_integer,
+                    print("error 0 <= a_1 <= |beta - alpha| / 2\n");
+                    return(-1);
+                );
+            );
+            if (lambda2 - lambda1 < 0,
+                T_2 = [1,1,0;0,-1,0;0,0,-1];
+                res = 1/matdet(T_2)*matadjoint(T_2)*res*T_2;
+                unimodular *= T_2;
+                if (res[1,2] != lambda1 - lambda2 - first_rem || res[1,3] != -a_3 - a_2 + a_3 * first_integer,
+                    print("error 0 <= a_1 <= |beta - alpha| / 2\n");
+                    return(-1);
+                );
+            );
+        );
+
+        nod = gcd(abs(lambda2 - lambda1), res[1,2]);
+        second_integer = divrem(res[1,3], nod)[1];
+        second_rem = divrem(res[1,3], nod)[2];
+        
+        if (second_rem < 0 || second_rem >= nod,
+            print("error 0 <= rem < nod\n");
+            return(-1);
+        );
+        
+        A = matsnf([lambda2 - lambda1; res[1,2]], 1)[1];
+        B = 1/matdet(A)*matadjoint(A)*[0,1;1,0];
+        x_1 = B[2,2];
+        y_1 = B[1,2];
+        det_1 = matdet([lambda2 - lambda1, y_1; res[1,2], x_1]);
+        if (det_1 != nod,
+            x_1 = -x_1;
+            y_1 = -y_1;
+            det_1 = matdet([lambda2 - lambda1, y_1; res[1,2], x_1]);
+            if (det_1 != nod,
+                print("error x_1 * (beta - alpha) - a_1 * y_1 = d\n");
+                return(-1);
+            );
+        );
+        
+        x = second_integer * x_1;
+        y = second_integer * y_1;
+        det = matdet([lambda2 - lambda1, y; res[1,2], x]);
+        if (det != nod * second_integer,
+            x = -x;
+            y = -y;
+            det = matdet([(lambda2 - lambda1), y; res[1,2], x]);
+            if (det != nod * second_integer,
+                print("error x * (beta - alpha) - a_1 * y = q * d\n");
+                return(-1);
+            );
+        );
+        if (res[1,3] - det != second_rem,
+            print("error a_2 + a_1 * y - x * (deta - alpha) = rem\n");
+            return(-1);
+        );
+
+        a_1 = res[1,2];
+        a_2 = res[1,3];
+        a_3 = res[2,3];
+        T_3 = [1,0,x;0,1,y;0,0,1];
+        res = 1/matdet(T_3)*matadjoint(T_3)*res*T_3;
+        unimodular *= T_3;
+        if (res[1,3] != second_rem || res[1,2] != a_1 || res[1,3] != a_2 + a_1 * y - x * (lambda2 - lambda1),
+            print("error a_2 = rem\n");
+            return(-1);
+        );
+        if (divrem(abs(lambda2 - lambda1), 2)[2] == 1 && res[1,2] != 0 && res[2,3] >= 1,
+            print("II.a\n 1<= a_1 <= |beta - alpha| / 2 = "divrem(abs(lambda2 - lambda1), 2)[1]"\n 0 <= a_2 < d = "nod"\n a_3 >= 1\n\n\n");
+            return([res, unimodular]);,
+        if (divrem(abs(lambda2 - lambda1), 2)[2] == 0
+            && res[1,2] != 0 && res[1,2] <= divrem(abs(lambda2 - lambda1), 2)[1] - 1 && res[2,3] >= 1,
+            print("II.b.1\n 1 <= a_1 <= |beta - alpha| / 2 - 1 = "divrem(abs(lambda2 - lambda1), 2)[1] - 1"\n 0 <= a_2 < d = "nod"\n a_3 >= 1\n\n\n");
+            return([res, unimodular]);;
+        ));
+
+        if (res[1,2] == 0 && (res[1,3] > divrem(abs(lambda2 - lambda1), 2)[1] || res[1,3] < 0),
+            T_4 = [-1,0,x_1;0,1,0;0,0,1]; 
+            res = 1/matdet(T_4)*matadjoint(T_4)*res*T_4;
+            unimodular *= T_4;
+            if (res[1,3] != nod - second_rem || res[1,3] != x_1 * (lambda2 - lambda1) - second_rem,
+                print("error a_2 = nod - rem\n");
+                return(-1);
+            );
+            if (res[1,3] < 0 || res[1,3] > divrem(nod, 2)[1] || res[1,3] > divrem(abs(lambda2 - lambda1), 2)[1],
+                print("error 0 <= rem <= |beta - alpha| / 2\n");
+                return(-1);
+            );
+        );
+
+        if (res[1,2] == 0 && 0 <= res[1,3] && res[1,3] <= divrem(abs(lambda2 - lambda1), 2)[1] && res[2,3] >= 1,
+            print("I\n a_1 = 0\n 0 <= a_2 <= |beta - alpha| / 2 = "divrem(abs(lambda2 - lambda1), 2)[1]"\n a_3 >= 1\n\n\n");
+            return([res, unimodular]);;
+        );
+
+        if (res[2,3] == 0 && (res[1,2] != 0 || res[1,3] != 0),
+            z = gcd(res[1,2], res[1,3]);
+            S_1 = [0,0,0;0,0,0;0,0,0];
+            A = matsnf([res[1,2]; -res[1,3]], 1)[1];
+            B = 1/matdet(A)*matadjoint(A)*[0,1;1,0];
+            S_1[1,1] = B[2,2];
+            S_1[2,1] = B[1,2];
+            det = matdet([res[1,2], -S_1[2,1]; res[1,3], S_1[1,1]]);
+            if (det != z,
+                S_1[1,1] = -S_1[1,1];
+                S_1[2,1] = -S_1[2,1];
+                det = matdet([res[1,2], -S_1[2,1]; res[1,3], S_1[1,1]]);
+                if (det != z,
+                    print("error (a_1 a_2) * S_1 = (z 0)");
+                    return(-1);
+                );
+            );
+            S_1[1,2] = -divrem(res[1,3], z)[1];
+            if(res[1,3] == 0, S_1[2,2] = 1, S_1[2,2] = -divrem(res[1,2] * S_1[1,2], res[1,3])[1]);
+            if (matdet([res[1,2], -S_1[2,2]; res[1,3], S_1[1,2]]) != 0,
+                print("error (a_1 a_2) * S_1 = (z 0)");
+                return(-1);
+            );
+
+            T = matrix(3,3);
+            T[1,1] = 1;
+            for (i = 2, 3, for(j = 2, 3, T[i,j] = S_1[i - 1,j - 1]));
+            res = 1/matdet(T)*matadjoint(T)*res*T;
+            unimodular *= T;
+            if (res[1,2] != z,
+                print("error a_1 = NOD(a_1, a_2)\n");
+                return(-1);
+            );
+
+            d = gcd(lambda2 - lambda1, z);
+            A = matsnf([lambda2 - lambda1; -z], 1)[1];
+            B = 1/matdet(A)*matadjoint(A)*[0,1;1,0];
+            t_1 = B[2,2];
+            t_2 = B[1,2];
+            if (matdet([lambda2 - lambda1, z; -t_2, t_1]) != d,
+                t_1 = -t_1;
+                t_2 = -t_2;
+                if (matdet([lambda2 - lambda1, z; -t_2, t_1]) != d,
+                    print("error (beta - alpha) * t_1 + z * t_2 = nod\n");
+                    return(-1);
+                );
+            );
+            H = [1,-t_1,divrem(z,d)[1];0,t_2,divrem(lambda2 - lambda1,d)[1];0,0,1];
+            if (gcd(H[2,2], H[2,3]) != 1,
+                print("error NOD(H[1][1], H[1][2]) = 1\n");
+                return(-1);
+            );
+            A = matsnf([H[2,2]; H[2,3]], 1)[1];
+            B = 1/matdet(A)*matadjoint(A)*[0,1;1,0];
+            H[3,3] = B[2,2];
+            H[3,2] = B[1,2];
+            if (matdet([H[2,2], H[2,3]; H[3,2], H[3,3]]) != 1,
+                H[3,2] = -H[3,2];
+                H[3,3] = -H[3,3];
+                if (matdet([H[2,2], H[2,3]; H[3,2], H[3,3]]) != 1,
+                    print("error H[1][1] * H[2][2] - H[1][2] * H[2][1]) = 1\n");
+                    return(-1);
+                );
+            );
+            res = 1/matdet(H)*matadjoint(H)*res*H;
+            unimodular *= H;
+            if (res[1,2] != d,
+                print("error a_1 = NOD(beta - alpha, a_1, a_2)\n");
+                return(-1);
+            );
+        );
+
+        if (res[2,3] == 0 && 
+            res[1,3] == 0 && (res[1,2] == gcd(lambda2 - lambda1, gcd(res[1,2], res[1,3])) || res[1,2] == 0),
+            if(res[1,2] == 0, par_t = 0, par_t = gcd(lambda2 - lambda1, gcd(res[1,2], res[1,3])));
+            print("I\n a_1 = d = "par_t"\n a_2 = 0\n a_3 = 0\n\n\n");
+            return([res, unimodular]);;
+        );
+
+        if (divrem(abs(lambda2 - lambda1), 2)[2] == 0 && res[1,2] == divrem(abs(lambda2 - lambda1),2)[1],
+            third_integer = divrem(res[2,3], res[1,2])[1];
+            third_rem = divrem(res[2,3], res[1,2])[2];
+            if (lambda2 - lambda1 > 0,
+                if (divrem(third_rem, 2)[1] + 1 <= res[1,3] && res[1,3] <= divrem(res[1,2] + third_rem, 2)[1],
+                    e = third_integer;
+                    S_1 = [-1,1,0;0,1,e;0,0,1];
+                    a_1 = res[1,2];
+                    a_2 = res[1,3];
+                    a_3 = res[2,3];
+                    res = 1/matdet(S_1)*matadjoint(S_1)*res*S_1;
+                    unimodular *= S_1;
+                    if (res[1,2] != lambda2 - lambda1 - a_1 
+                        || res[1,3] != a_3 - e * a_1 - a_2 || res[1,2] != a_1 || res[2,3] != a_3,
+                        print("error -(a_1 - rem) / 2 <= a_2 <= rem / 2\n");
+                        return(-1);
+                    );
+                    if (res[1,3] != third_rem - a_2,
+                        print("error -(a_1 - rem) / 2 <= a_2 <= rem / 2\n");
+                        return(-1);
+                    );
+                    if (-divrem(res[1,2] - third_rem, 2)[1] > res[1,3] || res[1,3] > divrem(third_rem, 2)[1],
+                        print("error -(a_1 - rem) / 2 <= a_2 <= rem / 2\n");
+                        return(-1);
+                    ),
+                
+                if (divrem(res[1,2] + third_rem, 2)[1] + 1 <= res[1,3] && res[1,3] <= res[1,3] - 1,
+                    S_2 = [1,0,0;0,1,-1;0,0,1];
+                    a_1 = res[1,2];
+                    a_2 = res[1,3];
+                    a_3 = res[2,3];
+                    res = 1/matdet(S_2)*matadjoint(S_2)*res*S_2;
+                    unimodular *= S_2;
+                    if (res[1,3] != a_2 - a_1 || res[1,2] != a_1 || res[2,3] != a_3,
+                        print("error -(a_1 - rem) / 2 <= a_2 <= -1 <= rem / 2\n");
+                        return(-1);
+                    );
+                    if (-divrem(res[1,2] - third_rem, 2)[1] > res[1,3] || res[1,3] > divrem(third_rem, 2)[1] || res[1,3] > -1,
+                        print("error -(a_1 - rem) / 2 <= a_2 <= -1 <= rem / 2\n");
+                        return(-1);
+                    );
+                ));
+                print("II.b.2\n b - a > 0\n a_1 = |beta - alpha| / 2 = "divrem(abs(lambda2 - lambda1), 2)[1]"\n "divrem(res[1,2] - third_rem, 2)[1] * (-1)" = -(a_1 - r) / 2 <= a_2 <= r / 2 = "divrem(third_rem, 2)[1]" , r = "third_rem"\n a_3 >= 1\n\n\n");
+                return([res, unimodular]),
+
+            if (lambda2 - lambda1 < 0,
+                if (divrem(res[1,2] - third_rem, 2)[1] + 1 <= res[1,3] && res[1,3] <= res[1,2] - divrem(third_rem, 2)[1] - 1,
+                    e = third_integer + 1;
+                    S_3 = [1,1,0;0,-1,e;0,0,-1];
+                    a_1 = res[1,2];
+                    a_2 = res[1,3];
+                    a_3 = res[2,3];
+                    res = 1/matdet(S_3)*matadjoint(S_3)*res*S_3;
+                    unimodular *= S_3;
+                    if (res[1,2] != lambda1 - lambda2 - a_1 || res[1,3] != e * a_1 - a_3 - a_2,
+                        print("error -rem / 2 <= a_2 <= (a_1 - rem) / 2\n");
+                        return(-1);
+                    );
+                    if (res[1,2] != a_1 || res[1,3] != e * a_1 - a_3 - a_2,
+                        print("error -rem / 2 <= a_2 <= (a_1 - rem) / 2\n");
+                        return(-1);
+                    );
+                    if (res[1,3] != a_1 - third_rem - a_2,
+                        print("error -rem / 2 <= a_2 <= (a_1 - rem) / 2\n");
+                        return(-1);
+                    );
+                    if (-divrem(third_rem, 2)[1] > res[1,3] || res[1,3] > divrem(res[1,2] - third_rem, 2)[1],
+                        print("error -rem / 2 <= a_2 <= (a_1 - rem) / 2\n");
+                        return(-1);
+                    ),
+                    
+                if (res[1,2] - divrem(third_rem, 2)[1] <= res[1,3] && res[1,3] <= res[1,2] - 1,
+                    S_4 = [1,0,0;0,1,-1;0,0,1];
+                    a_1 = res[1,2];
+                    a_2 = res[1,3];
+                    a_3 = res[2,3];
+                    res = 1/matdet(S_4)*matadjoint(S_4)*res*S_4;
+                    unimodular *= S_4;
+                    if (res[1,3] != a_2 - a_1,
+                        print("error -rem / 2 <= a_2 <= (a_1 - rem) / 2\n");
+                        return(-1);
+                    );
+                    if (-divrem(third_rem, 2)[1] > res[1,3] || res[1,3] > divrem(res[1,2] - third_rem, 2)[1] || res[1,3] > -1,
+                        print("error -rem / 2 <= a_2 <= (a_1 - rem) / 2\n");
+                        return(-1);
+                    );
+                ));
+                print("II.b.2\n b - a < 0\n a_1 = |b - a| / 2 = "divrem(abs(lambda2 - lambda1), 2)[1]"\n "divrem(third_rem, 2)[1] * (-1)" = -r / 2 <= a_2 <= (a_1 - r) / 2 = "divrem(res[1,2] - third_rem, 2)" , r = "third_rem"\n a_3 >= 1\n\n\n");
+                return([res, unimodular]);;
+            ));
+        );
+        return([res, unimodular]);;
+    );
+    
+    if(lambda1 != lambda2 && lambda2 != lambda3 && lambda1 != lambda3,
+        res = result;
+        first_integer = divrem(res[1,2], lambda2 - lambda1)[1];
+        first_rem = divrem(res[1,2], lambda2 - lambda1)[2];
+        
+        if (res[1,2] >= lambda2 - lambda1 || res[1,2] < 0,
+            a_1 = res[1,2];
+            a_2 = res[1,3];
+            a_3 = res[2,3];
+            S_1 = [1,first_integer,0;0,1,0;0,0,1];
+            res = 1/matdet(S_1)*matadjoint(S_1)*res*S_1;
+            unimodular *= S_1;
+            if (res[1,2] != first_rem || res[1,3] != a_2 - a_3 * first_integer || res[2,3] != a_3,
+                print("error 0 <= a_1 < beta - alpha\n");
+                return(-1);
+            );
+        );
+
+        if (res[1,2] > divrem(lambda2 - lambda1, 2)[1] || res[1,2] < 0,
+            a_1 = res[1,2];
+            a_2 = res[1,3];
+            a_3 = res[2,3];
+            T_1 = [1,-1,0;0,-1,0;0,0,-1];
+            res = 1/matdet(T_1)*matadjoint(T_1)*res*T_1;
+            unimodular *= T_1;
+            if (res[1,2] != lambda2 - lambda1 - a_1 || res[1,3] != a_3 - a_2 || res[2,3] != a_3,
+                print("error 0 <= a_1 <= (beta - alpha) / 2\n");
+                return(-1);
+            );
+        );
+
+        third_integer = divrem(res[2,3], lambda3 - lambda2)[1];
+        third_rem = divrem(res[2,3], lambda3 - lambda2)[2];
+
+        if (res[2,3] >= lambda3 - lambda2 || res[2,3] < 0,
+            a_1 = res[1,2];
+            a_2 = res[1,3];
+            a_3 = res[2,3];
+            S_2 = [1,0,0;0,1,third_integer;0,0,1];
+            res = 1/matdet(S_2)*matadjoint(S_2)*res*S_2;
+            unimodular *= S_2;
+            if (res[1,2] != a_1 || res[1,3] != a_2 + a_1 * third_integer || res[2,3] != third_rem,
+                print("error 0 <= a_3 < gamma - beta\n");
+                return(-1);
+            );
+        );
+        
+         if (res[2,3] > divrem(lambda3 - lambda2, 2)[1] || res[2,3] < 0,
+            a_1 = res[1,2];
+            a_2 = res[1,3];
+            a_3 = res[2,3];
+            T_2 = [1,0,0;0,1,-1;0,0,-1];
+            res = 1/matdet(T_2)*matadjoint(T_2)*res*T_2;
+            unimodular *= T_2;
+            if (res[1,2] != a_1 || res[1,3] != -a_1 - a_2 || res[2,3] != lambda3 - lambda2 - a_3,
+                print("error 0 <= a_3 <= (gamma - beta) / 2\n");
+                return(-1);
+            );
+        );
+
+        second_integer = divrem(res[1,3], lambda3 - lambda1)[1];
+        second_rem = divrem(res[1,3], lambda3 - lambda1)[2];
+
+        if (res[1,3] >= lambda3 - lambda1 || res[1,3] < 0,
+            a_1 = res[1,2];
+            a_2 = res[1,3];
+            a_3 = res[2,3];
+            S_3 = [1,0,second_integer;0,1,0;0,0,1];
+            res = 1/matdet(S_3)*matadjoint(S_3)*res*S_3;
+            unimodular *= S_3;
+            if (res[1,2] != a_1 || res[1,3] != second_rem || res[2,3] != a_3,
+                print("error 0 <= a_2 < gamma - alpha\n");
+                return(-1);
+            );
+        );
+        
+        if (res[1,2] != 0 && divrem(lambda3 - lambda2, 2)[2] == 1,
+            print("II.a\n 1 <= a_1 <= (beta - alpha) / 2 = "divrem(lambda2 - lambda1, 2)[1]"\n 0 <= a_2 < gamma - alpha = "lambda3 - lambda1"\n 0 <= a_3 <= (gamma - beta) / 2 = "divrem(lambda3 - lambda2, 2)[1]"\n\n\n");
+            return([res, unimodular]);;
+        );
+        
+        if (res[1,2] != 0 && 
+            divrem(lamda3 - lamda2, 2)[2] == 0 && 0 <= res[2,3] && res[2,3] <= divrem(lambda3 - lambda2, 2)[1] - 1,
+            print("II.b.1\n 1 <= a_1 <= (beta - alpha) / 2 = "divrem(lambda2 - lambda1, 2)[1]"\n 0 <= a_2 < gamma - alpha = "lambda3 - lambda1"\n 0 <= a_3 <= (gamma - beta) / 2 - 1 = "divrem(lambda3 - lambda2, 2)[1] - 1"\n\n\n");
+            return([res, unimodular]);;
+        );
+        
+         if (res[1,2] == 0 && (res[1,3] > divrem(lambda3 - lambda1, 2)[1] || res[1,3] < 0),
+            a_1 = res[1,2];
+            a_2 = res[1,3];
+            a_3 = res[2,3];
+            T_3 = [1,0,-1;0,-1,0;0,0,-1];
+            res = 1/matdet(T_3)*matadjoint(T_3)*res*T_3;
+            unimodular *= T_3;
+            if (res[1,2] != 0 || res[1,3] != lambda3 - lambda1 - a_2 || res[2,3] != a_3,
+                print("error a_1 = 0 and 0 <= a_2 <= (gamma - alpha) / 2\n");
+                return(-1);
+            );
+        );
+        
+        if (res[1,2] == 0,
+            print("I\n a_1 = 0\n 0 <= a_2 <= (gamma - alpha) / 2 = "divrem(lambda3 - lambda1, 2)[1]"\n 0 <= a_3 <= (gamma - beta) / 2 = "divrem(lambda3 - lambda2, 2)[1]"\n\n\n");
+            return([res, unimodular]);;
+        );
+        
+        if (divrem(lambda3 - lambda2, 2)[2] == 0 && res[2,3] == divrem(lambda3 - lambda2, 2)[1] && res[1,2] != 0,
+            a_1 = res[1,2];
+            a_2 = res[1,3];
+            a_3 = res[2,3];
+            if (divrem(lambda3 - lambda1 - a_1, 2)[1] + 1 <= a_2 && a_2 <= lambda3 - lambda1 - divrem(a_1, 2)[1] - 1,
+                T_4 = [1,0,-1;0,1,-1;0,0,-1];
+                res = 1/matdet(T_4)*matadjoint(T_4)*res*T_4;
+                unimodular *= T_4;
+                if (res[1,2] != a_1 || res[1,3] != lambda3 - lambda1 - a_1 - a_2 || 
+                    res[2,3] != lambda3 - lambda2 - a_3 || res[2,3] != a_3,
+                    print("error - a_1 / 2 <= a_2 <= (gamma - alpha - a_1) / 2\n");
+                    return(-1);
+                ),
+            
+            if (lambda3 - lambda1 - divrem(a_1, 2)[1] <= a_2 && a_2 <= lambda3 - lambda1 - 1,
+                T_5 = [1,0,1;0,1,0;0,0,1];
+                res = 1/matdet(T_5)*matadjoint(T_5)*res*T_5;
+                unimodular *= T_5;
+                if (res[1,2] != a_1 || res[1,3] != lambda1 - lambda3 + a_2 || res[2,3] != a_3,
+                    print("error - a_1 / 2 <= a_2 <= (gamma - alpha - a_1) / 2\n");
+                    return(-1);
+                );
+            ));
+            
+            print("II.b.2\n 1 <= a_1 <= (beta - alpha) / 2 = "divrem(lambda2 - lambda1, 2)[1]"\n "divrem(res[1,2], 2)[1] * (-1)" = -a_1 / 2 <= a_2 <= (gamma - alpha - a_1) / 2 = "divrem(lambda3 - lambda1 - res[1,2], 2)[1]"\n a_3 = (gamma - beta) / 2 = "divrem(lambda3 - lambda2, 2)[1]"\n\n\n");
+        );
+        return([res, unimodular]);;
+    );
+}
+
+f_file_results(str) = {
+	file = fileopen("RESULTS.txt", "a");
+	filewrite(file, str);
+	fileclose(file);
+}
+
+f_file_errors(str) = {
+	file = fileopen("ERRORS.txt", "a");
+	filewrite(file, str);
+	fileclose(file);
+}
+
+find_matrix_dimension_2(matr1) = {
+	COUNT++;
+	print("\ninput matrix: ", matr1);
+	res1 = algorithm2(matr1);
+	if(res1 == -1, f_file_errors(Str(matr1, " что-то пошло не так в алгоритме\n\n")); ERRORS++; return);
+	if(res1 == 0, f_file_results(Str(matr1, " собственные числа нецелые\n\n")); NOROOTS++; return);
+
+	res_matr1 = res1[1];
+	print("unimodular: "res_unimodular1 = res1[2]);
+	print("result: "res_matr1"\n");
+	f_file_results(Str("Исходная матрица: ", matr1, "\nУнимодулярная матрица: ", res_unimodular1, "\nРезультат: ", res_matr1, "\n\n"));
+}
+
+find_matrix_dimension_3(matr1) = {
+	COUNT++;
+	print("\ninput matrix: ", matr1);
+	res1 = algorithm(matr1);
+	if(res1 == -1, f_file_errors(Str(matr1, " что-то пошло не так в алгоритме\n\n")); ERRORS++; return);
+	if(res1 == 0, f_file_results(Str(matr1, " собственные числа нецелые\n\n")); NOROOTS++; return);
+
+	res_matr1 = res1[1];
+	print("unimodular: ", res_unimodular1 = res1[2]);
+	print("result: ", res_matr1"\n");
+	f_file_results(Str("Исходная матрица: ", matr1, "\nУнимодулярная матрица: ", res_unimodular1, "\nРезультат: ", res_matr1, "\n\n"));
+}
+
+compare_matrix_dimension_2(matr1, matr2) = {
+	COUNT++;
+	print("\ninput matrix: ", matr1);
+	res1 = algorithm2(matr1);
+	if(res1 == -1, f_file_errors(Str(matr1, " что-то пошло не так в алгоритме\n\n")); ERRORS++; return);
+	if(res1 == 0, f_file_results(Str(matr1, " собственные числа нецелые\n\n")); NOROOTS++; return);
+
+	res_matr1 = res1[1];
+	print("unimodular: ", res_unimodular1 = res1[2]);
+	print("result: ", res_matr1"\n");
+
+	print("\ninput matrix: "matr2);
+        res2 = algorithm2(matr2);
+	if(res2 == -1, f_file_errors(Str(matr2, " что-то пошло не так в алгоритме\n\n")); ERRORS++; return);
+	if(res2 == 0, f_file_results(Str(matr2, " собственные числа нецелые\n\n")); NOROOTS++; return);
+
+        res_matr2 = res2[1];
+	print("unimodular: ", res_unimodular2 = res2[2]);
+	print("result: ", res_matr2"\n");
+
+	for(i = 1, 2,
+		for(j = 1, 2,
+			if(res_matr1[i,j] != res_matr2[i,j],
+				print("false");
+				FALSE_COMPARE++;
+				f_file_results(Str(matr1, " : ", matr2 , " - false\n\n"));
+				return
+			)
+		)
+	);
+	print("true");
+	TRUE_COMPARE++;
+	f_file_results(Str(matr1, " : ", matr2 , " - true"));
+
+	unimodular = res_unimodular1*(1/matdet(res_unimodular2)*matadjoint(res_unimodular2));
+	res = 1/matdet(unimodular)*matadjoint(unimodular)*matr1*unimodular;
+
+	for(i = 1, 2,
+		for(j = 1, 2,
+			if(res[i,j] != matr2[i,j],
+				print("false");
+				FALSE_UNIMODULAR++;
+				f_file_results(Str(unimodular, " - false\n\n"));
+				return;
+			);
+		);
+	);
+	print("unimodular ", unimodular, " - true");
+	TRUE_UNIMODULAR++;
+	f_file_results(Str(unimodular, " - true\n\n"));
+	return;
+}
+
+compare_matrix_dimension_3(matr1, matr2) = {
+	COUNT++;
+	print("\ninput matrix: ", matr1);
+	res1 = algorithm(matr1);
+	if(res1 == -1, f_file_errors(Str(matr1, " что-то пошло не так в алгоритме\n\n")); ERRORS++; return);
+	if(res1 == 0, f_file_results(Str(matr1, " собственные числа нецелые\n\n")); NOROOTS++; return);
+
+	res_matr1 = res1[1];
+	print("unimodular: ", res_unimodular1 = res1[2]);
+	print("result: ", res_matr1"\n");
+
+        print("\ninput matrix: ", matr2);
+        res2 = algorithm(matr2);
+	if(res2 == -1, f_file_errors(Str(matr2, " что-то пошло не так в алгоритме\n\n")); ERRORS++; return);
+	if(res2 == 0, f_file_results(Str(matr2, " собственные числа нецелые\n\n")); NOROOTS++; return);
+
+        res_matr2 = res2[1];
+	print("unimodular: ", res_unimodular2 = res2[2]);
+	print("result: ", res_matr2"\n");
+
+	for(i = 1, 3,
+		for(j = 1, 3,
+			if(res_matr1[i,j] != res_matr2[i,j],
+				print("false");
+				FALSE_COMPARE++;
+				f_file_results(Str(matr1, " : ", matr2 , " - false\n\n"));
+				return;
+			);
+		);
+	);
+	print("true");
+	TRUE_COMPARE++;
+	f_file_results(Str(matr1, " : ", matr2 , " - true"));
+
+	unimodular = res_unimodular1*(1/matdet(res_unimodular2)*matadjoint(res_unimodular2));
+	res = 1/matdet(unimodular)*matadjoint(unimodular)*matr1*unimodular;
+
+	for(i = 1, 3,
+		for(j = 1, 3,
+			if(res[i,j] != matr2[i,j],
+				print("false");
+				FALSE_UNIMODULAR++;
+				f_file_results(Str(unimodular, " - false\n\n"));
+				return;
+			);
+		);
+	);
+	print("unimodular ", unimodular, " - true");
+	TRUE_UNIMODULAR++;
+	f_file_results(Str(unimodular, " - true\n\n"));
+	return;
+}
+
+test_find_matrix_dimension_2(count) = {
+	while(COUNT < count,
+		find_matrix_dimension_2([	random(10) - 5, random(10) - 5;
+						random(10) - 5, random(10) - 5	]
+		);
+							
+	);
+	print("\nALGORITHM ERRORS : " , ERRORS, "\nMATRICES WITHOUT ROOTS : ", NOROOTS, "\nNUMBER OF TESTS : ", COUNT);
+	ERRORS = NOROOTS = COUNT = 0;
+}
+
+test_find_matrix_dimension_3(count) = {
+	while(COUNT < count,
+		find_matrix_dimension_3([		random(10) - 5	, random(10) - 5, random(10) - 5;
+							random(10) - 5	, random(10) - 5, random(10) - 5;
+							random(10) - 5	, random(10) - 5, random(10) - 5	]
+		);
+							
+	);
+	print("\nALGORITHM ERRORS : " , ERRORS, "\nMATRICES WITHOUT ROOTS : ", NOROOTS, "\nNUMBER OF TESTS : ", COUNT);
+	ERRORS = NOROOTS = COUNT = 0;
+}
+
+test_compare_matrix_dimension_2(count) = {
+	while(COUNT < count,
+		compare_matrix_dimension_2(	[	random(10) - 5, random(10) - 5;
+							random(10) - 5, random(10) - 5	],
+
+						[	random(10) - 5, random(10) - 5;
+							random(10) - 5, random(10) - 5	]
+		);
+		print("******************************************************************");				
+	);
+	print("\nALGORITHM ERRORS : " , ERRORS, "\nMATRICES WITHOUT ROOTS : ", NOROOTS, "\nNUMBER OF TESTS : ", COUNT, "\nCORRECT SIMILARITY OF MATRICES : ", TRUE_COMPARE , "\nCORRECT UNIMODULAR MATRIX : ", TRUE_UNIMODULAR, "\nINCORRECT SIMILARITY OF MATRIXES : ", FALSE_COMPARE, "\nINCORRECT UNIMODULAR MATRIX : ", FALSE_UNIMODULAR);
+	ERRORS = NOROOTS = COUNT = TRUE_COMPARE = TRUE_UNIMODULAR = FALSE_COMPARE = FALSE_UNIMODULAR = 0;
+}
+
+test_compare_matrix_dimension_3(count) = {
+	while(COUNT < count,
+		compare_matrix_dimension_3(	[	random(10) - 5	, random(10) - 5, random(10) - 5;
+							random(10) - 5	, random(10) - 5, random(10) - 5;
+							random(10) - 5	, random(10) - 5, random(10) - 5	],
+
+						[	random(10) - 5	, random(10) - 5, random(10) - 5;
+							random(10) - 5	, random(10) - 5, random(10) - 5;
+							random(10) - 5	, random(10) - 5, random(10) - 5	]
+		);
+		print("******************************************************************");				
+	);
+	print("\nALGORITHM ERRORS : " , ERRORS, "\nMATRICES WITHOUT ROOTS : ", NOROOTS, "\nNUMBER OF TESTS : ", COUNT, "\nCORRECT SIMILARITY OF MATRICES : ", TRUE_COMPARE , "\nCORRECT UNIMODULAR MATRIX : ", TRUE_UNIMODULAR, "\nINCORRECT SIMILARITY OF MATRIXES : ", FALSE_COMPARE, "\nINCORRECT UNIMODULAR MATRIX : ", FALSE_UNIMODULAR);
+	ERRORS = NOROOTS = COUNT = TRUE_COMPARE = TRUE_UNIMODULAR = FALSE_COMPARE = FALSE_UNIMODULAR = 0;
+}
+
+print(" * find_matrix_dimension_2(param1) - find the canonical matrix 2x2, where param1 = [a11,a12;a21,a22]\n * find_matrix_dimension_3(param1) - find the canonical matrix 3x3, where param1 = [a11,a12,a13;a21,a22,a23;a31,a32,a33]\n * compare_matrix_dimension_2(param1, param2) - compare similarity classes of matrices 2x2\n * compare_matrix_dimension_3(param1, param2) - compare similarity classes of matrices 3x3\n * test_find_matrix_dimension_2(param1) - find_matrix_dimension_2(param1) function test, where param1 - number of tests \n * test_find_matrix_dimension_3(param1) - find_matrix_dimension_3(param1) function test\n * test_compare_matrix_dimension_2(param1) - compare_matrix_dimension_2(param1, param2) function test\n * test_compare_matrix_dimension_3(param1) - compare_matrix_dimension_3(param1, param2) function test\n");
